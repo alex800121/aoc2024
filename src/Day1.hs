@@ -9,7 +9,7 @@ day1 :: IO ()
 day1 = do
   [a, b] <- map sort . transpose . map (map (read @Int) . words) . lines <$> readFile "input/input1.txt"
   putStrLn
-    . ("day1: " ++)
+    . ("day1a: " ++)
     . show
     . sum
     . map abs
@@ -18,7 +18,7 @@ day1 = do
       a' = f a
       b' = f b
   putStrLn
-    . ("day1: " ++)
+    . ("day1b: " ++)
     . show
     $ IM.foldrWithKey (\k v acc -> fromMaybe 0 (b' IM.!? k) * v * k + acc) 0 a'
 
