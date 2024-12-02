@@ -35,9 +35,23 @@ common shared
         pqueue,
         unordered-containers,
         random,
+        heftia-effects ^>= 0.5,
+        ghc-typelits-knownnat ^>= 0.7,
         AOC
-    default-extensions: TypeFamilies, OverloadedRecordDot, TypeApplications, DataKinds
-    ghc-options: -O2
+    default-extensions:
+        LambdaCase,
+        DerivingStrategies,
+        DataKinds,
+        TypeFamilies,
+        BlockArguments,
+        FunctionalDependencies,
+        RecordWildCards,
+        DefaultSignatures,
+        PatternSynonyms,
+        TemplateHaskell,
+        PartialTypeSignatures,
+        AllowAmbiguousTypes
+    ghc-options: -fplugin GHC.TypeLits.KnownNat.Solver
 
 library
     import: shared
