@@ -1,21 +1,25 @@
+{-# OPTIONS_GHC -fplugin GHC.TypeLits.KnownNat.Solver #-}
+
 module Day3 where
 
+import Control.Applicative (Alternative (..))
 import Control.Monad (guard)
+import Control.Monad.Hefty
+import Control.Monad.Hefty.NonDet
+import Control.Monad.Hefty.State
 import Data.Maybe (mapMaybe)
-import MyLib (Parser, signedInteger)
-import Text.Megaparsec
-import Text.Megaparsec.Char
+import HeftiaParser
 
 data Mul a = Mul a a
-  deriving (Show)
+  deriving (Eq, Show)
 
 data Switch = Do | Dont
-  deriving (Show)
+  deriving (Show, Eq)
 
 data SMul a = S Switch | M (Mul a)
-  deriving (Show)
+  deriving (Eq, Show)
 
-mulParser :: Parser (Mul Int)
+mulParser :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) => Eff eh ef (Mul Int)
 mulParser = do
   string "mul("
   a <- signedInteger
@@ -25,21 +29,21 @@ mulParser = do
   guard (a >= 0 && a < 1000 && b >= 0 && b < 1000)
   pure (Mul a b)
 
-manyMul :: Parser [Mul Int]
+manyMul :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) => Eff eh ef [Mul Int]
 manyMul =
-  (eof >> pure [])
-    <|> try ((:) <$> mulParser <*> manyMul)
+  (eof @_ @eh >> pure [])
+    <|> try @[Mul Int] @String ((:) <$> mulParser <*> manyMul)
     <|> (anySingle >> manyMul)
 
-switchParser :: Parser Switch
+switchParser :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) => Eff eh ef Switch
 switchParser =
   (string "do()" >> pure Do) <|> (string "don't()" >> pure Dont)
 
-manySMul :: Parser [SMul Int]
+manySMul :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) => Eff eh ef [SMul Int]
 manySMul =
   (eof >> pure [])
-    <|> try ((:) . S <$> switchParser <*> manySMul)
-    <|> try ((:) . M <$> mulParser <*> manySMul)
+    <|> try @[SMul Int] @String ((:) . S <$> switchParser <*> manySMul)
+    <|> try @[SMul Int] @String ((:) . M <$> mulParser <*> manySMul)
     <|> (anySingle >> manySMul)
 
 applyMul :: Mul Int -> Int
@@ -58,11 +62,13 @@ filterSMul (S Dont : xs) = f xs
 day3 :: IO ()
 day3 = do
   input <- readFile "input/input3.txt"
-  putStrLn
-    . ("day3a: " ++)
-    . show
-    $ (sum . fmap applyMul <$> parseMaybe manyMul input)
-  putStrLn
-    . ("day3b: " ++)
-    . show
-    $ (sum . fmap applyMul . filterSMul <$> parseMaybe manySMul input)
+  -- putStrLn
+  --   . ("day3a: " ++)
+  --   . show @(Maybe [Mul Int])
+  --   $ runPure $ evalState input $ runNonDet $ runChooseH (manyMul <* eof)
+  -- putStrLn
+  --   . ("day3b: " ++)
+  --   . show
+  --   $ (sum . fmap applyMul . filterSMul <$> runPure $ evalState input $ runNonDet $ runChooseH (manySMul <* eof))
+  print $ show @(Maybe _) $ runPure $ runNonDet $ runState "132333" $ runChooseH (try do
+    string "123" <|> string "23" <|> many anySingle)
