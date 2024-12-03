@@ -1,8 +1,8 @@
 module Day1 where
 
-import Data.List (sort, transpose, group)
 import Data.IntMap.Strict (IntMap)
-import qualified Data.IntMap.Strict as IM
+import Data.IntMap.Strict qualified as IM
+import Data.List (group, sort, transpose)
 import Data.Maybe (fromMaybe)
 
 day1 :: IO ()
@@ -21,4 +21,3 @@ day1 = do
     . ("day1b: " ++)
     . show
     $ IM.foldrWithKey (\k v acc -> fromMaybe 0 (b' IM.!? k) * v * k + acc) 0 a'
-
