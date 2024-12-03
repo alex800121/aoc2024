@@ -1,6 +1,7 @@
 module Day2 where
 
 import MyLib (pickAnySplit)
+import Control.Arrow
 
 day2 :: IO ()
 day2 = do
