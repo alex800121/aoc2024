@@ -17,11 +17,15 @@ day2 = do
     $ filter solveB input
 
 solveA :: [Int] -> Bool
-solveA l = all (((&&) <$> (>= 1) <*> (<= 3)) . abs) l' && ((||) <$> all (>= 0) <*> all (< 0)) l'
-  where
-    l' = zipWith subtract l (tail l)
+solveA =
+  ( (&&)
+      <$> all (((&&) <$> (>= 1) <*> (<= 3)) . abs)
+      <*> ( (||)
+              <$> all (>= 0)
+              <*> all (< 0)
+          )
+  )
+    . (zipWith subtract <$> id <*> tail)
 
 solveB :: [Int] -> Bool
-solveB l = any solveA l'
-  where
-    l' = l : map snd (pickAnySplit l)
+solveB = any solveA . ((:) <$> id <*> map snd . pickAnySplit)
