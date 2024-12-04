@@ -62,13 +62,16 @@ filterSMul (S Dont : xs) = f xs
 day3 :: IO ()
 day3 = do
   input <- readFile "input/input3.txt"
-  -- putStrLn
-  --   . ("day3a: " ++)
-  --   . show @(Maybe [Mul Int])
-  --   $ runPure $ evalState input $ runNonDet $ runChooseH (manyMul <* eof)
+  putStrLn
+    . ("day3a: " ++)
+    . show @(Maybe [Mul Int])
+    $ runPure $ evalState input $ runNonDet $ runChooseH (manyMul <* eof)
   -- putStrLn
   --   . ("day3b: " ++)
   --   . show
   --   $ (sum . fmap applyMul . filterSMul <$> runPure $ evalState input $ runNonDet $ runChooseH (manySMul <* eof))
-  print $ show @(Maybe _) $ runPure $ runNonDet $ runState "132333" $ runChooseH (try do
-    string "123" <|> string "23" <|> many anySingle)
+  print @(Maybe _)
+    . runPure
+    . runNonDet
+    . evalState "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
+    $ runChooseH manySMul
