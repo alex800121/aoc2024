@@ -1,18 +1,12 @@
 module Day3 where
 
-import Control.Monad (guard)
+import Control.Monad (void, guard)
 import Data.Maybe (mapMaybe)
 import MyLib (Parser, signedInteger)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
 data Mul a = Mul a a
-  deriving (Show)
-
-data Switch = Do | Dont
-  deriving (Show)
-
-data SMul a = S Switch | M (Mul a)
   deriving (Show)
 
 mulParser :: Parser (Mul Int)
@@ -31,29 +25,21 @@ manyMul =
     <|> try ((:) <$> mulParser <*> manyMul)
     <|> (anySingle >> manyMul)
 
-switchParser :: Parser Switch
-switchParser =
-  (string "do()" >> pure Do) <|> (string "don't()" >> pure Dont)
-
-manySMul :: Parser [SMul Int]
-manySMul =
+parseTillDo :: Parser [Mul Int]
+parseTillDo =
   (eof >> pure [])
-    <|> try ((:) . S <$> switchParser <*> manySMul)
-    <|> try ((:) . M <$> mulParser <*> manySMul)
-    <|> (anySingle >> manySMul)
+    <|> (try (string "do()") >> manyMulSwitch)
+    <|> (anySingle >> parseTillDo)
+
+manyMulSwitch :: Parser [Mul Int]
+manyMulSwitch =
+  (eof >> pure [])
+    <|> (try (string "don't()") >> parseTillDo)
+    <|> try ((:) <$> mulParser <*> manyMulSwitch)
+    <|> (anySingle >> manyMulSwitch)
 
 applyMul :: Mul Int -> Int
 applyMul (Mul x y) = x * y
-
-filterSMul :: [SMul a] -> [Mul a]
-filterSMul [] = []
-filterSMul (M x : xs) = x : filterSMul xs
-filterSMul (S Do : xs) = filterSMul xs
-filterSMul (S Dont : xs) = f xs
-  where
-    f [] = []
-    f (S Do : xs) = filterSMul xs
-    f (_ : xs) = f xs
 
 day3 :: IO ()
 day3 = do
@@ -65,4 +51,4 @@ day3 = do
   putStrLn
     . ("day3b: " ++)
     . show
-    $ (sum . fmap applyMul . filterSMul <$> parseMaybe manySMul input)
+    $ (sum . fmap applyMul <$> parseMaybe manyMulSwitch input)
