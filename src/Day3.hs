@@ -10,6 +10,7 @@ import Control.Monad.Hefty.NonDet
 import Control.Monad.Hefty.State
 import Data.Maybe (mapMaybe)
 import HeftiaParser
+import Paths_AOC2024 (getDataDir)
 
 data Mul a = Mul a a
   deriving (Eq, Show)
@@ -65,10 +66,10 @@ applyMul (Mul x y) = x * y
 
 day3 :: IO ()
 day3 = do
-  input <- readFile "input/input3.txt"
+  input <- readFile . (++ "/input/input3.txt") =<< getDataDir
   putStrLn
     . ("day3a: " ++)
-    . show 
+    . show
     . fmap (sum . map applyMul)
     . runPure
     . evalState input
@@ -76,7 +77,7 @@ day3 = do
     $ runChooseH (manyMul <* eof)
   putStrLn
     . ("day3b: " ++)
-    . show 
+    . show
     . fmap (sum . map applyMul)
     . runPure
     . evalState input
