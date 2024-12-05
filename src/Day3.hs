@@ -50,15 +50,14 @@ manySMul =
 applyMul :: Mul Int -> Int
 applyMul (Mul x y) = x * y
 
-filterSMul :: [SMul a] -> [Mul a]
 filterSMul [] = []
-filterSMul (M x : xs) = x : filterSMul xs
-filterSMul (S Do : xs) = filterSMul xs
 filterSMul (S Dont : xs) = f xs
   where
     f [] = []
     f (S Do : xs) = filterSMul xs
     f (_ : xs) = f xs
+filterSMul (M m : xs) = m : filterSMul xs
+filterSMul (_ : xs) = filterSMul xs
 
 day3 :: IO ()
 day3 = do
