@@ -40,6 +40,19 @@ switchParser :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) 
 switchParser =
   (string "do()" >> pure Do) <|> (string "don't()" >> pure Dont)
 
+parseTillDo :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) => Eff eh ef [Mul Int]
+parseTillDo =
+  (eof >> pure [])
+    <|> (try (string "do()") >> manyMulSwitch)
+    <|> (anySingle >> parseTillDo)
+
+manyMulSwitch :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) => Eff eh ef [Mul Int]
+manyMulSwitch =
+  (eof >> pure [])
+    <|> (try (string "don't()") >> parseTillDo)
+    <|> try ((:) <$> mulParser <*> manyMulSwitch)
+    <|> (anySingle >> manyMulSwitch)
+
 manySMul :: forall eh ef. (ChooseH <<| eh, Empty <| ef, State String <| ef) => Eff eh ef [SMul Int]
 manySMul =
   (eof >> pure [])
@@ -49,15 +62,6 @@ manySMul =
 
 applyMul :: Mul Int -> Int
 applyMul (Mul x y) = x * y
-
-filterSMul [] = []
-filterSMul (S Dont : xs) = f xs
-  where
-    f [] = []
-    f (S Do : xs) = filterSMul xs
-    f (_ : xs) = f xs
-filterSMul (M m : xs) = m : filterSMul xs
-filterSMul (_ : xs) = filterSMul xs
 
 day3 :: IO ()
 day3 = do
@@ -73,8 +77,8 @@ day3 = do
   putStrLn
     . ("day3b: " ++)
     . show 
-    . fmap (sum . map applyMul . filterSMul)
+    . fmap (sum . map applyMul)
     . runPure
     . evalState input
     . runNonDetMaybe
-    $ runChooseH (manySMul <* eof)
+    $ runChooseH (manyMulSwitch <* eof)
