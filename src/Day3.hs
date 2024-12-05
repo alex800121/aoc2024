@@ -3,6 +3,7 @@
 module Day3 where
 
 import Control.Applicative (Alternative (..))
+import Control.Arrow
 import Control.Monad (guard)
 import Control.Monad.Hefty
 import Control.Monad.Hefty.NonDet
@@ -64,14 +65,17 @@ day3 = do
   input <- readFile "input/input3.txt"
   putStrLn
     . ("day3a: " ++)
-    . show @(Maybe [Mul Int])
-    $ runPure $ evalState input $ runNonDet $ runChooseH (manyMul <* eof)
-  -- putStrLn
-  --   . ("day3b: " ++)
-  --   . show
-  --   $ (sum . fmap applyMul . filterSMul <$> runPure $ evalState input $ runNonDet $ runChooseH (manySMul <* eof))
-  print @(Maybe _)
+    . show 
+    . fmap (sum . map applyMul)
     . runPure
-    . runNonDet
-    . evalState "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
-    $ runChooseH manySMul
+    . evalState input
+    . runNonDetMaybe
+    $ runChooseH (manyMul <* eof)
+  putStrLn
+    . ("day3b: " ++)
+    . show 
+    . fmap (sum . map applyMul . filterSMul)
+    . runPure
+    . evalState input
+    . runNonDetMaybe
+    $ runChooseH (manySMul <* eof)
