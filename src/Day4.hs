@@ -6,9 +6,8 @@ import MyLib (drawArray)
 
 type Index = (Int, Int)
 
-testXMAS2 :: [(Index, Char)] -> Index -> UArray Index Char -> Bool
-testXMAS2 [] _ _ = True
-testXMAS2 ((i, c) : xs) xy@(x, y) arr = Just c == (arr !? bimap (+ x) (+ y) i) && testXMAS2 xs xy arr
+testXMAS2 :: Index -> UArray Index Char -> [(Index, Char)] -> Bool
+testXMAS2 xy@(x, y) arr = all (\(i, c) -> Just c == (arr !? bimap (+ x) (+ y) i))
 
 directions = [(x, y) | x <- [-1 .. 1], y <- [-1 .. 1], not (x == 0 && y == 0)]
 
@@ -33,7 +32,7 @@ solve input x =
     [ ()
       | i <- indices input,
         xmas <- x,
-        testXMAS2 xmas i input
+        testXMAS2 i input xmas
     ]
 
 day4 :: IO ()
