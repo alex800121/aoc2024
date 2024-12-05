@@ -3,6 +3,7 @@ module Day4 where
 import Data.Array.Unboxed (UArray, indices, (!?))
 import Data.Bifunctor (Bifunctor (bimap, first))
 import MyLib (drawArray)
+import Paths_AOC2024 (getDataDir)
 
 type Index = (Int, Int)
 
@@ -38,7 +39,7 @@ solve input x =
 day4 :: IO ()
 day4 = do
   -- input <- drawArray @UArray . lines <$> readFile "input/test4.txt"
-  input <- drawArray @UArray . lines <$> readFile "input/input4.txt"
+  input <- drawArray @UArray . lines <$> (readFile . (++ "/input/input4.txt") =<< getDataDir)
   putStrLn
     . ("day4a: " ++)
     . show

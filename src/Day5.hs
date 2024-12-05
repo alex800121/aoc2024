@@ -6,6 +6,7 @@ import Data.IntSet (IntSet)
 import Data.IntSet qualified as IS
 import Data.List (partition, sortBy)
 import Data.List.Split
+import Paths_AOC2024 (getDataDir)
 
 type Rules = IntMap Int
 
@@ -25,7 +26,7 @@ applyOrdering rules x y = case (rules IM.!? x, rules IM.!? y) of
 
 day5 :: IO ()
 day5 = do
-  [a, b] <- map lines . splitOn "\n\n" <$> readFile "input/input5.txt"
+  [a, b] <- map lines . splitOn "\n\n" <$>(readFile . (++ "/input/input5.txt") =<< getDataDir) 
   let rules = ruleParser a
       books = map (map (read @Int) . splitOn ",") b
       (correct, incorrect) = partition (applyRules rules) books
