@@ -1,11 +1,11 @@
 module Day2 where
 
 import MyLib (pickAnySplit)
-import Control.Arrow
+import Paths_AOC2024 (getDataDir)
 
 day2 :: IO ()
 day2 = do
-  input <- map (map (read @Int) . words) . lines <$> readFile "input/input2.txt"
+  input <- map (map (read @Int) . words) . lines <$> (readFile . (++ "/input/input2.txt") =<< getDataDir)
   putStrLn
     . ("day2a: " ++)
     . show
