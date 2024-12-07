@@ -37,6 +37,7 @@ common shared
         random,
         heftia-effects ^>= 0.5,
         ghc-typelits-knownnat ^>= 0.7,
+        parallel,
         AOC
     default-extensions:
         LambdaCase,
