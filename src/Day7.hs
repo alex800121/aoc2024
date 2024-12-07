@@ -9,6 +9,8 @@ import Paths_AOC2024 (getDataDir)
 import Text.Read (readMaybe)
 import Data.Functor (($>))
 import HeftiaParser (runNonDetMaybe)
+import Data.List (partition)
+import Control.Parallel.Strategies (rpar, parMap)
 
 inputParser :: String -> Maybe (Int, [Int])
 inputParser s = do
@@ -37,9 +39,11 @@ day7 = do
     . ("day7a: " ++)
     . show
     . sum
-    $ mapMaybe (\x -> (runPure . runNonDetMaybe . tryOperators [(+), (*)]) x $> fst x)  input
+    . map fst
+    $ filter (isJust . runPure . runNonDetMaybe . tryOperators [(+), (*)])  input
   putStrLn
     . ("day7b: " ++)
     . show
     . sum
-    $ mapMaybe (\x -> (runPure . runNonDetMaybe . tryOperators [(+), (*), con]) x $> fst x)  input
+    . map fst
+    $ filter (isJust . runPure . runNonDetMaybe . tryOperators [(+), (*), con])  input
