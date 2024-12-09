@@ -1,8 +1,7 @@
 module Day9 where
 
-import Control.Arrow ((>>>))
 import Control.Monad (when, (>=>))
-import Control.Monad.ST.Strict (ST, fixST, runST)
+import Control.Monad.ST.Strict (ST, runST)
 import Data.Char (digitToInt, isDigit)
 import Data.Function (on)
 import Data.IntMap (IntMap)
@@ -14,7 +13,6 @@ import Data.Maybe (mapMaybe)
 import Data.Ord (Down (..), comparing)
 import Data.Vector (Vector, freeze, ifoldl', takeWhile, thaw)
 import Data.Vector.Mutable (MVector, STVector, generate, new, read, write)
-import Debug.Trace (traceShow)
 import Paths_AOC2024 (getDataDir)
 
 data Disk = Space | ID Int deriving (Show, Eq)
@@ -31,10 +29,8 @@ condenseB (s, t) = go li (s, t)
   where
     li = sortBy (comparing Down) (IM.keys s)
     go (x : xs) (s, t)
-      -- \| traceShow (s, t) False = undefined
       | Just (oldPos, len) <- s IM.!? x,
         ((newPos, rest), len') : _ <- sortBy (compare `on` fst . fst) $ mapMaybe (liftA2 (,) <$> ((t IM.!?) >=> IS.minView) <*> pure) [len .. 9],
-        -- newLen <- len' - len = traceShow (x, newLen, newPos, len) $
         newLen <- len' - len,
         newPos < oldPos =
           go xs (IM.insert x (newPos, len) s, IM.insertWith (<>) newLen (IS.singleton (newPos + len)) $ IM.insert len' rest t)
@@ -76,7 +72,7 @@ checkSumA = ifoldl' f 0
     f acc i (ID x) = acc + (i * x)
 
 checkSumB :: IntMap (Int, Int) -> Int
-checkSumB = IM.foldlWithKey (\acc k (pos, len) -> acc + ((((pos + (pos + len - 1)) * len) `div` 2) * k)) 0
+checkSumB = IM.foldlWithKey (\acc k (pos, len) -> acc + ((((2 * pos + len - 1) * len) `div` 2) * k)) 0
 
 day9 :: IO ()
 day9 = do
