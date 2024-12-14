@@ -28,31 +28,15 @@ inputParser = do
 -- Prize: X=5128, Y=6804
 
 -- solveX :: Input -> [(Int, Int)]
-solveX ((ax, bx, targetx), (ay, by, targety)) =
-  sort
-    [ 3 * a + b
-      | let (cx, xa, xb) = emcd ax bx,
-        let (cy, ya, yb) = emcd ay by,
-        -- traceShow (c, la, lb) True,
-        targetx `mod` cx == 0,
-        targety `mod` cy == 0,
-        let timex = targetx `div` cx,
-        let timey = targety `div` cy,
-        let (xa', xb') = (xa * timex, xb * timex),
-        let (ya', yb') = (ya * timey, yb * timey),
-        (a, b) <- f xa' xb' ax bx,
-        (a, b) `elem` f ya' yb' ay by
-    ]
+solveX ((a, b, c), (d, e, f))
+  | m /= 0 && mx == 0 && my == 0 = Just $ 3 * dx + dy
+  | otherwise = Nothing
   where
-    f a b ax bx
-      | a <= 0 = takeWhile (\(x, y) -> x >= 0 && y >= 0) $ iterate (bimap (+ bx') (subtract ax')) (a + (bx' * da), b - (ax' * da))
-      | b <= 0 = takeWhile (\(x, y) -> x >= 0 && y >= 0) $ iterate (bimap (subtract bx') (+ ax')) (a - (bx' * db), b + (ax' * db))
-      where
-        c = gcd ax bx
-        ax' = ax `div` c
-        bx' = bx `div` c
-        da = negate (a `div` bx')
-        db = negate (b `div` ax')
+    m = a * e - b * d
+    cx = c * e - b * f
+    cy = a * f - c * d
+    (dx, mx) = cx `divMod` m
+    (dy, my) = cy `divMod` m
 
 modifyInput :: Input -> Input
 modifyInput ((a, b, x), (c, d, y)) = ((a, b, x + 10000000000000), (c, d, y + 10000000000000))
@@ -61,6 +45,14 @@ day13 :: IO ()
 day13 = do
   -- print $ emcd 2 3
   input <- map (fromJust . parseMaybe inputParser) . splitOn "\n\n" <$> (readFile . (++ "/input/input13.txt") =<< getDataDir)
-  input <- map (fromJust . parseMaybe inputParser) . splitOn "\n\n" <$> (readFile . (++ "/input/test13.txt") =<< getDataDir)
-  print $ sum $ concatMap (take 1 . solveX) input
-  print $ sum $ concatMap (take 1 . solveX . modifyInput) input
+  -- input <- map (fromJust . parseMaybe inputParser) . splitOn "\n\n" <$> (readFile . (++ "/input/test13.txt") =<< getDataDir)
+  putStrLn
+    . ("day13a: " ++)
+    . show
+    . sum
+    $ mapMaybe solveX input
+  putStrLn
+    . ("day13b: " ++)
+    . show
+    . sum
+    $ mapMaybe (solveX . modifyInput) input
