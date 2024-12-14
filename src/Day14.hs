@@ -1,9 +1,8 @@
-
 module Day14 where
 
 import Data.Bifunctor (Bifunctor (..))
 import Data.Function (on)
-import Data.List (find, partition)
+import Data.List (find, partition, sortBy)
 import Data.Map.Strict qualified as Map
 import Data.Maybe (fromJust, mapMaybe)
 import MyLib (Nat (..), Parser, Vec (..), drawGraph, signedInteger, vZipWith)
@@ -56,13 +55,43 @@ quadrant = bimap fy fy . fx
       | otherwise = fy ys
 
 deleteSymmetry :: [Index] -> Int
-deleteSymmetry = Map.size . Map.filter (== 1) . foldr (\x -> Map.insertWith (+) x 1) Map.empty . map (\(Cons x y) -> Cons (wm - abs (wm - x)) y)
+deleteSymmetry = Map.size . Map.filter (== 1) . foldr ((\x -> Map.insertWith (+) x 1) . (\(Cons x y) -> Cons (wm - abs (wm - x)) y)) Map.empty
+
+vx :: [Index] -> Double
+vx l = sum $ map (\(Cons x (Cons y _)) -> (fromIntegral x - m) ^ 2) l
+  where
+    m = sum (map (\(Cons x (Cons y _)) -> fromIntegral x) l) / fromIntegral (length l)
+
+vy :: [Index] -> Double
+vy l = sum $ map (\(Cons x (Cons y _)) -> (fromIntegral y - m) ^ 2) l
+  where
+    m = sum (map (\(Cons x (Cons y _)) -> fromIntegral y) l) / fromIntegral (length l)
+
+-- detectLow :: Double -> [Double] -> Maybe Int
+detectLow _ [] = Nothing
+detectLow factor (x : xs) = go 1 x x xs
+  where
+    go n s c _ | (s / fromIntegral n) > factor * c = Just $ n - 1
+    go _ _ _ [] = Nothing
+    go n s c (x : xs) = go (n + 1) (s + c) x xs
+
+draw :: [Index] -> String
+draw = unlines . drawGraph (\case Just _ -> '#'; Nothing -> ' ') . Map.fromList . map (\(Cons x (Cons y _)) -> ((x, y), ()))
 
 day14 :: IO ()
 day14 = do
-  -- input <- mapMaybe (parseMaybe inputParser) . lines <$> (readFile . (++ "/input/test14.txt") =<< getDataDir)
   input <- mapMaybe (parseMaybe inputParser) . lines <$> (readFile . (++ "/input/input14.txt") =<< getDataDir)
-  -- print $ quadrant $ map (starPos (Cons width (Cons height Nil)) 100) input
-  print $ uncurry (*) $ bimap (uncurry (*)) (uncurry (*)) $ quadrant $ map (starPos (Cons width (Cons height Nil)) 100) input
-  -- mapM_ putStrLn $ map (unlines . drawGraph (\case Just _ -> '#'; _ -> ' ') . Map.fromList . map (\(Cons x (Cons y _)) -> ((x, y), ()))) $  map (\n -> map (starPos (Cons width (Cons height Nil)) n) input) [0..]
-  mapM_ (appendFile "output14") $ map (unlines . drawGraph (\case Just _ -> '#'; _ -> ' ') . Map.fromList . map (\(Cons x (Cons y _)) -> ((x, y), ()))) $ filter ((< 100) . deleteSymmetry) $ map (\n -> map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
+  putStrLn
+    . ("day14a: " ++)
+    . show
+    . uncurry (*)
+    . bimap (uncurry (*)) (uncurry (*))
+    . quadrant
+    $ map (starPos (Cons width (Cons height Nil)) 100) input
+  putStrLn
+    . ("day14b: " ++)
+    . show
+    . detectLow 2.0
+    $ map (\n -> ((+) <$> vx <*> vy) $ map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
+    -- $ map (\n -> vy $ map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
+    -- $ map (\n -> vx $ map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
