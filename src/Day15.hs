@@ -25,8 +25,6 @@ data Cell = Wall | Space | Box Index deriving (Show, Eq, Ord)
 
 type Instructions = [Direction]
 
--- convertGame :: GameState -> GameState
--- convertGame g
 readInput :: String -> (GameState, Instructions)
 readInput input = (G m r, ins)
   where
@@ -58,7 +56,6 @@ moveBox d g@(G m r@(x, y)) = go m [(r', Space)]
     moveC Space = Space
     moveC (Box i) = Box (move i)
     r' = move r
-    -- go m is | trace ((show is ++) $ ('\n' :) $ unlines $ drawGraph (\case Just Wall -> '#'; Just (Box _) -> 'O'; Just Space -> '.'; Nothing -> '@') $ Map.delete r' m) False = undefined
     go m [] = Just (G m r')
     go m ((i, c) : is) = case m Map.!? i of
       Just Wall -> Nothing
@@ -84,13 +81,16 @@ expand (G m (x, y)) = G m' (2 * x, y)
 day15 :: IO ()
 day15 = do
   input <- readInput <$> (readFile . (++ "/input/input15.txt") =<< getDataDir)
-  -- input <- readInput <$> (readFile . (++ "/input/test15.txt") =<< getDataDir)
-  -- input <- readInput <$> (readFile . (++ "/input/test15'.txt") =<< getDataDir)
-  -- putStrLn $ unlines $ drawGraph (\case Just Wall -> '#'; Just Box -> 'O'; _ -> '.') $  _m $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) input
-  print $ calcScore $ _m $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) input
-  print $ calcScore $ _m $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) $ first expand input
-
--- putStrLn $ unlines $ drawGraph (\case Just Wall -> '#'; Just (Box _) -> 'O'; _ -> '.') $ _m $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) input
--- putStrLn $ unlines $ drawGraph (\case Just Wall -> '#'; Just (Box _) -> 'O'; _ -> '.') $ _m $ expand $ fst input
--- putStrLn $ unlines $ drawGraph (\case Just Wall -> '#'; Just (Box _) -> 'O'; _ -> '.') $  _m $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) $ first expand input
--- print $ calcScore $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) $ first expand input
+  putStrLn
+    . ("day15a: " ++)
+    . show
+    . calcScore
+    . _m
+    $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) input
+  putStrLn
+    . ("day15a: " ++)
+    . show
+    . calcScore
+    . _m
+    . uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc)))
+    $ first expand input
