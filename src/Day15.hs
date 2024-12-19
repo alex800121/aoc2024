@@ -88,7 +88,7 @@ day15 = do
     . _m
     $ uncurry (foldl' (\acc x -> fromMaybe acc (moveBox x acc))) input
   putStrLn
-    . ("day15a: " ++)
+    . ("day15b: " ++)
     . show
     . calcScore
     . _m
