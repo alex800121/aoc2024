@@ -1,3 +1,4 @@
+
 module Day14 where
 
 import Data.Bifunctor (Bifunctor (..))
