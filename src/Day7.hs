@@ -19,7 +19,7 @@ inputParser s = do
   (,) <$> readMaybe @Int a <*> pure (map read $ words b)
 
 tryOperators :: [Int -> Int -> Int] -> (Int, [Int]) -> Bool
-tryOperators _ (_, []) = False
+tryOperators _ (target, []) = target == 0
 tryOperators ops (target, x : xs) = go xs x
   where
     go [] current = target == current
