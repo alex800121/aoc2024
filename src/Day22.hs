@@ -12,7 +12,7 @@ mixPrune f = (.&. (16777216 - 1)) . (\x -> xor x (f x)) :: Int -> Int
 
 step = mixPrune (`shiftL` 11) . mixPrune (`shiftR` 5) . mixPrune (`shiftL` 6)
 
-toIM = foldr (\x acc -> acc * 32 + (x + 9)) 0
+toIM = foldr (\x acc -> acc * 20 + (x + 9)) 0
 
 day22 :: IO ()
 day22 = do
