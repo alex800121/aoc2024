@@ -52,7 +52,7 @@ day12 = do
   -- input <- drawMap Just . lines <$> (readFile . (++ "/input/test12.txt") =<< getDataDir)
   let regions = regionA input
   putStrLn
-    . ("day12b: " ++)
+    . ("day12a: " ++)
     . show
     . sum
     $ map (\x -> Map.size x * (Map.size x * 4 - sum x)) regions
