@@ -26,30 +26,32 @@ data Gate = AND | OR | XOR deriving (Show, Ord, Read, Eq)
 type Ins = Map Reg (Gate, Reg, Reg)
 
 buildAdder m cx i
+  | Just (Reg Z 45) <- cx, i == 45 = Right (Reg Z 45)
+  | i == 45 = Left (i, [])
   | Just c <- cx = first (i,) do
       xxory <- f [] (XOR, xi, yi)
       xandy <- f [(XOR, xi, yi)] (AND, xi, yi)
       cxorab <- f [(AND, xi, yi), (XOR, xi, yi)] (XOR, xxory, c)
       candab <- f [(XOR, xxory, c), (AND, xi, yi), (XOR, xi, yi)] (AND, xxory, c)
       if cxorab /= Reg Z i
-        then Left [(x, m Map.!? x) | x <- [(OR, xandy, candab), (AND, xxory, c), (XOR, xxory, c), (AND, xi, yi), (XOR, xi, yi)]]
+        then Left [m Map.!? x | x <- [(OR, xandy, candab), (AND, xxory, c), (XOR, xxory, c), (AND, xi, yi), (XOR, xi, yi)]]
         else do
           f [(XOR, xxory, c), (AND, xi, yi), (XOR, xi, yi), (AND, xxory, c)] (OR, xandy, candab)
   | Nothing <- cx = first (i,) do
       xxory <- f [] (XOR, xi, yi)
-      if xxory /= Reg Z i then Left [(x, m Map.!? x) | x <- [(XOR, xi, yi)]] else f [(XOR, xi, yi)] (AND, xi, yi)
+      if xxory /= Reg Z i then Left [m Map.!? (XOR, xi, yi)] else f [(XOR, xi, yi)] (AND, xi, yi)
   where
     xi = Reg X i
     yi = Reg Y i
-    f acc a = maybeToRight ([(x, m Map.!? x) | x <- a : acc]) (m Map.!? a)
+    f acc a = maybeToRight ([m Map.!? x | x <- a : acc]) (m Map.!? a)
 
 buildAdderList n m ins = go m ins Nothing 0
   where
-    go _ _ _ i | i == n = pure []
+    go _ _ _ i | i > n = pure []
     go m ins c i = case buildAdder m c i of
       Left (i0, xs) -> do
-        (_, Just x) <- xs
-        (_, Just y) <- xs
+        (Just x) <- xs
+        (Just y) <- xs
         guard (x > y)
         let ins' = Map.insert x (ins Map.! y) (Map.insert y (ins Map.! x) ins)
             m' = rev ins'
