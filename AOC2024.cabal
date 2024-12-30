@@ -38,6 +38,7 @@ common shared
         heftia-effects ^>= 0.5,
         ghc-typelits-knownnat ^>= 0.7,
         parallel,
+        either,
         AOC
     default-extensions:
         LambdaCase,
@@ -52,7 +53,7 @@ common shared
         TemplateHaskell,
         PartialTypeSignatures,
         AllowAmbiguousTypes
-    ghc-options: -fplugin GHC.TypeLits.KnownNat.Solver
+    ghc-options: -O2 -fplugin GHC.TypeLits.KnownNat.Solver
 
 library
     import: shared
