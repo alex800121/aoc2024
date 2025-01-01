@@ -1,12 +1,12 @@
-
 module Day14 where
 
+import Control.Monad (join)
 import Data.Bifunctor (Bifunctor (..))
 import Data.Function (on)
 import Data.List (find, partition, sortBy)
 import Data.Map.Strict qualified as Map
 import Data.Maybe (fromJust, mapMaybe)
-import MyLib (Nat (..), Parser, Vec (..), drawGraph, signedInteger, vZipWith)
+import MyLib (Nat (..), Parser, Vec (..), crt, drawGraph, signedInteger, vZipWith)
 import Paths_AOC2024 (getDataDir)
 import Text.Megaparsec (parseMaybe, parseTest)
 import Text.Megaparsec.Char (char, string)
@@ -55,9 +55,6 @@ quadrant = bimap fy fy . fx
       | y > hm = second (1 +) $ fy ys
       | otherwise = fy ys
 
-deleteSymmetry :: [Index] -> Int
-deleteSymmetry = Map.size . Map.filter (== 1) . foldr ((\x -> Map.insertWith (+) x 1) . (\(Cons x y) -> Cons (wm - abs (wm - x)) y)) Map.empty
-
 vx :: [Index] -> Double
 vx l = sum $ map (\(Cons x (Cons y _)) -> (fromIntegral x - m) ^ 2) l
   where
@@ -79,6 +76,11 @@ detectLow factor (x : xs) = go 1 x x xs
 draw :: [Index] -> String
 draw = unlines . drawGraph (\case Just _ -> '#'; Nothing -> ' ') . Map.fromList . map (\(Cons x (Cons y _)) -> ((x, y), ()))
 
+solveB l = do
+  a <- detectLow 2.0 $ map vx l
+  b <- detectLow 2.0 $ map vy l
+  crt (a, width) (b, height)
+
 day14 :: IO ()
 day14 = do
   input <- mapMaybe (parseMaybe inputParser) . lines <$> (readFile . (++ "/input/input14.txt") =<< getDataDir)
@@ -92,7 +94,6 @@ day14 = do
   putStrLn
     . ("day14b: " ++)
     . show
-    . detectLow 2.0
-    $ map (\n -> ((+) <$> vx <*> vy) $ map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
-    -- $ map (\n -> vy $ map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
-    -- $ map (\n -> vx $ map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
+    . fmap fst
+    . solveB
+    $ map (\n -> map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
