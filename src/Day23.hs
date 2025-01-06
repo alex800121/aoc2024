@@ -35,19 +35,6 @@ solveA m = IM.foldlWithKey' f Set.empty m
             es1 = m IM.! e
             es = IS.foldl' (\acc x -> Set.insert (IS.fromList [k0, e, x]) acc) acc $ es0 `IS.intersection` es1
 
--- solveB :: IntMap IntSet -> IntSet
--- solveB m = go (Set.fromList $ map IS.singleton $ IS.toList ks)
---   where
---     ks = IM.keysSet m
---     go :: Set IntSet -> IntSet
---     go start
---       | Set.null start' = Set.findMin start
---       | otherwise = go start'
---       where
---         intersections = IS.foldl' (\a -> IS.intersection a . (m IM.!)) ks
---         f s = IS.foldl' (\acc x -> Set.insert (IS.insert x s) acc) Set.empty (intersections s)
---         start' = Set.unions (Set.map f start)
-
 bka :: IntMap IntSet -> IntSet
 bka m = go IS.empty IS.empty (IM.keysSet m) IS.empty
   where
@@ -75,13 +62,6 @@ day23 = do
     . Set.filter (any ((== 't') . head))
     . Set.map (map toChr . IS.toList)
     $ solveA input
-  -- putStrLn
-  --   . ("day23b: " ++)
-  --   . intercalate ","
-  --   . sort
-  --   . map toChr
-  --   . IS.toList
-  --   $ solveB input
   putStrLn
     . ("day23b: " ++)
     . intercalate ","

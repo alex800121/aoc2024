@@ -53,8 +53,19 @@ common shared
         TemplateHaskell,
         PartialTypeSignatures,
         AllowAmbiguousTypes
-    ghc-options: -O2 -fplugin GHC.TypeLits.KnownNat.Solver
+    ghc-options: -O2 -fplugin GHC.TypeLits.KnownNat.Solver 
 
+benchmark main-bench
+    type: exitcode-stdio-1.0
+    hs-source-dirs:      benchmark
+    main-is:             AOCBench.hs
+    build-depends:    
+        base,
+        criterion,
+        AOC2024,
+        AOC
+    default-language:    GHC2021
+    
 library
     import: shared
     exposed-modules:
@@ -84,6 +95,7 @@ library
         Day24,
         Day25,
         Main
+    reexported-modules: AOC2024:Main as AOCMain
 
     -- Modules included in this library but not exported.
     other-modules:
@@ -134,4 +146,5 @@ executable AOC2024
     -- build-depends:
     --     AOC2020
     
+    -- ghc-options: -O2 -threaded -rtsopts -with-rtsopts=-N
     hs-source-dirs:   app, src

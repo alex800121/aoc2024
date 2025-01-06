@@ -1,12 +1,13 @@
 module Day16 where
 
-import Control.Monad.Hefty
-import Control.Monad.Hefty.State (State, modify, runState)
+import Data.Array.IArray qualified as A
 import Data.Bifunctor (Bifunctor (..))
-import Data.List (partition)
-import Data.Map.Strict (Map)
-import Data.Map.Strict qualified as Map
-import Data.Maybe (listToMaybe, mapMaybe)
+import Data.IntMap.Strict (IntMap)
+import Data.IntMap.Strict qualified as IM
+import Data.IntSet (IntSet)
+import Data.IntSet qualified as IS
+import Data.List (foldl', partition)
+import Data.Maybe (listToMaybe, mapMaybe, maybeToList)
 import Data.PQueue.Prio.Min (MinPQueue (..))
 import Data.PQueue.Prio.Min qualified as Q
 import Data.Set (Set)
@@ -16,38 +17,47 @@ import MyLib
   ( Direction (..),
     drawArray,
     drawGraph,
-    drawMap,
-    drawMapWithKeyM,
     toIndex,
   )
 import Paths_AOC2024 (getDataDir)
 
 type M = Set Index
 
-type MPlus = Map Index [(Int, (Direction, Index))]
+type MPlus = IntMap [(Int, (Direction, Int))]
 
 type Index = (Int, Int)
 
-dijkstra :: (Index -> Bool) -> MPlus -> (Direction, Index) -> [(Int, [Index])]
-dijkstra end mplus start = go Map.empty maxBound (Q.singleton 0 [start])
+dijkstra :: Int -> Int -> MPlus -> (Direction, Int) -> Maybe (Int, Set Index)
+dijkstra maxx end m start = go IS.empty IM.empty maxBound (Q.singleton 0 [start])
   where
-    go _ _ Empty = []
-    go travelled max ((n, r@((d, i) : rest)) :< q)
-      | max < n = []
-      | end i = (n, map snd r) : go travelled' n q
-      | maybe False (< n) (travelled Map.!? (d, i)) = go travelled max q
-      | otherwise = go travelled' max q'
+    go _ _ _ Empty = Nothing
+    go acc travelled !max ((n, r@(d, i) : rest) :< q)
+      | max < n = Just (max, Set.fromList $ concatMap facc $ IS.toList acc)
+      | end == i = go (IS.insert di acc) travelled' n q
+      | Just (n', xs) <- travelled IM.!? di = if n' == n then go acc travelled' max q else go acc travelled max q
+      | otherwise = go acc travelled' max q'
       where
-        travelled' = Map.insertWith min (d, i) n travelled
-        q' = q <> Q.fromList (map (second (: r)) l)
-        l = mapMaybe f (mplus Map.! i)
-        f (n', (d', i'))
-          | d' `elem` [succ d, pred d] = Just (n' + n + 1000, (d', i'))
-          | d' == succ (succ d) = Nothing
-          | d' == d = Just (n' + n, (d', i'))
+        fdi (d, i) = fromEnum d + 4 * i
+        !di = fdi r
+        facc e =
+          [ x
+            | e' <- maybe [] snd (travelled IM.!? e),
+              x <- buildPoints maxx (e `div` 4) (e' `div` 4) <> facc e'
+          ]
+        travelled' = IM.insertWith (\(x, y) -> bimap (`min` x) (<> y)) di (n, map fdi $ take 1 rest) travelled
+        !q' = foldl' f q ds
+        !ds = m IM.! i
+        f !q (n', (d', i'))
+          | d' `elem` [succ d, pred d] = Q.insert (n' + n + 1000) r' q
+          | d' == succ (succ d) = q
+          | d' == d = Q.insert (n' + n) r' q
+          where
+            r' = [(d', i'), r]
 
-flood :: [Index] -> M -> Index -> MPlus
-flood int m i = go Map.empty Set.empty [i]
+toInt maxx (x, y) = x * maxx + y
+
+flood :: Int -> [Index] -> M -> Index -> MPlus
+flood maxx int m i = go IM.empty Set.empty [i]
   where
     go acc _ [] = acc
     go acc travelled (x : xs)
@@ -55,7 +65,7 @@ flood int m i = go Map.empty Set.empty [i]
       | otherwise = go acc' travelled' (xs' <> xs)
       where
         next = floodOnce int m x
-        acc' = Map.insertWith (<>) x next acc
+        acc' = IM.insertWith (<>) (toInt maxx x) (map (second (second (toInt maxx))) next) acc
         travelled' = Set.insert x travelled
         xs' = map (snd . snd) next
 
@@ -72,20 +82,22 @@ floodOnce int m i = go [] 1 is
         acc' = acc <> map (n,) intersections
         start'' = filter ((`Set.member` m) . snd) $ map (\(d, i) -> (d, bimap (+ fst i) (+ snd i) (toIndex d))) start'
 
-readInput :: String -> ((Index, Index), M)
-readInput s = second Map.keysSet $ runPure $ runState ((0, 0), (0, 0)) $ drawMapWithKeyM f (0, 0) s
+readInput :: String -> (Int, (Index, Index), M)
+readInput s = (maxx, (start, end), m)
   where
-    f (_, y) '\n' = pure ((0, y + 1), Nothing)
-    f (x, y) '.' = pure ((x + 1, y), Just ())
-    f (x, y) 'S' = modify @(Index, Index) (first (const (x, y))) >> pure ((x + 1, y), Just ())
-    f (x, y) 'E' = modify @(Index, Index) (second (const (x, y))) >> pure ((x + 1, y), Just ())
-    f (x, y) _ = pure ((x + 1, y), Nothing)
+    a = drawArray @A.Array (lines s)
+    start = head [x | (x, 'S') <- A.assocs a]
+    end = head [x | (x, 'E') <- A.assocs a]
+    maxx = snd $ snd $ A.bounds a
+    m = Set.fromList [x | (x, e) <- A.assocs a, e /= '#']
 
-buildPoints :: [Index] -> [Index]
-buildPoints [] = []
-buildPoints [x] = [x]
-buildPoints ((x0, y0) : x@(x1, y1) : xs) = [(x, y) | x <- [xmin .. xmax], y <- [ymin .. ymax]] <> buildPoints (x : xs)
+fromInt maxx x = x `divMod` maxx
+
+buildPoints :: Int -> Int -> Int -> [Index]
+buildPoints maxx xy0 xy1 = [(x, y) | x <- [xmin .. xmax], y <- [ymin .. ymax]]
   where
+    (x0, y0) = fromInt maxx xy0
+    (x1, y1) = fromInt maxx xy1
     xmin = min x0 x1
     xmax = max x0 x1
     ymin = min y0 y1
@@ -93,19 +105,19 @@ buildPoints ((x0, y0) : x@(x1, y1) : xs) = [(x, y) | x <- [xmin .. xmax], y <- [
 
 day16 :: IO ()
 day16 = do
-  ((start, end), input) <- readInput <$> (readFile . (++ "/input/input16.txt") =<< getDataDir)
-  -- ((start, end), input) <- readInput <$> (readFile . (++ "/input/test16.txt") =<< getDataDir)
-  -- ((start, end), input) <- readInput <$> (readFile . (++ "/input/test16'.txt") =<< getDataDir)
-  let mplus = flood [start, end] input start
-      ans = dijkstra (== end) mplus (East, start)
+  (maxx, (start, end), input) <- readInput <$> (readFile . (++ "/input/input16.txt") =<< getDataDir)
+  let m = flood maxx [start, end] input start
+      ansA = dijkstra maxx (toInt maxx end) m (East, toInt maxx start)
   putStrLn
     . ("day16a: " ++)
     . show
     . fmap fst
-    $ listToMaybe ans
+    $ ansA
   putStrLn
     . ("day16b: " ++)
     . show
-    . Set.size
-    . Set.fromList
-    $ concatMap (buildPoints . snd) ans
+    $ fmap
+      ( Set.size
+          . snd
+      )
+      ansA

@@ -3,91 +3,59 @@ module Day20 where
 import Data.Array.IArray qualified as A
 import Data.Array.Unboxed (UArray)
 import Data.Bifunctor (Bifunctor (..))
-import Data.List (foldl', sort, tails)
-import Data.Map.Strict qualified as Map
+import Data.IntMap.Strict (IntMap)
+import Data.IntMap.Strict qualified as IM
+import Data.List (find)
 import Data.Set qualified as Set
 import MyLib (drawArray, toIndex)
 import Paths_AOC2024 (getDataDir)
-import Data.Function (on)
 
 type Index = (Int, Int)
 
-readInput s = (start, end, path)
+solve shortCut target = go IM.empty 0 0
+  where
+    go acc n pathLen [] = n
+    go !acc !n !pathLen ((x, y) : es) = go acc' n' pathLen' es
+      where
+        xpy = x + y
+        xmy = x - y
+        pathLen' = succ pathLen
+        !acc' = IM.insertWith (<>) xpy (IM.singleton xmy ((x, y), pathLen)) acc
+        !xs = snd $ IM.split (xpy - shortCut - 1) $ fst $ IM.split (xpy + shortCut + 1) acc
+        !n' =
+          n
+            + sum
+              ( IM.map
+                  ( IM.size
+                      . IM.filter (\((x0, y0), p0) -> (pathLen - p0) - (abs (x0 - x) + abs (y0 - y)) >= target)
+                      . snd
+                      . IM.split (xmy - shortCut - 1)
+                      . fst
+                      . IM.split (xmy + shortCut + 1)
+                  )
+                  xs
+              )
+
+readPath s = go Set.empty end
   where
     ss = drawArray $ lines s :: UArray Index Char
     start = head [p | (p, 'S') <- A.assocs ss]
     end = head [p | (p, 'E') <- A.assocs ss]
-    path = Map.fromList $ go Set.empty 0 start
-    go travelled n s
-      | s == end = [(end, n)]
-      | otherwise = (s, n) : go t' (n + 1) s'
+    go tra e@(x, y)
+      | start == e = [e]
+      | otherwise = e : go tra' e'
       where
-        t' = Set.insert s travelled
-        s' =
-          head $
-            [ i
-              | x <- [minBound .. maxBound],
-                let i = bimap (+ fst s) (+ snd s) (toIndex x),
-                i `Set.notMember` t',
-                maybe False (/= '#') (ss A.!? i)
-            ]
-
-shortCuts path limit target (i, a) =
-  length
-    [ ()
-      | xi <- [negate limit .. limit],
-        yi <- [negate limit .. limit],
-        let l = abs xi + abs yi,
-        l <= limit,
-        l >= 2,
-        let j = (fst i + xi, snd i + yi),
-        Just b <- [path Map.!? j],
-        b - a - l >= target
-    ]
--- readInput s = (start, end, path)
---   where
---     ss = drawArray $ lines s :: UArray Index Char
---     start = head [p | (p, 'S') <- A.assocs ss]
---     end = head [p | (p, 'E') <- A.assocs ss]
---     path = go Set.empty 0 start
---     go travelled n s
---       | s == end = [(end, n)]
---       | otherwise = (s, n) : go t' (n + 1) s'
---       where
---         t' = Set.insert s travelled
---         s' =
---           head $
---             [ i
---               | x <- [minBound .. maxBound],
---                 let i = bimap (+ fst s) (+ snd s) (toIndex x),
---                 i `Set.notMember` t',
---                 maybe False (/= '#') (ss A.!? i)
---             ]
---
--- shortCuts path limit target =
---   length
---     [ ()
---       | (start, n0) : rest <- tails path,
---         (end, n1) <- drop target rest,
---         let l = uncurry ((+) `on` abs) $ bimap (subtract (fst start)) (subtract (snd start)) end,
---         l <= limit,
---         l >= 2,
---         n1 - n0 - l >= target
---     ]
+        Just e' = find (\p -> p `Set.notMember` tra' && Just '#' /= ss A.!? p) $ map (bimap (+ x) (+ y) . toIndex) [minBound .. maxBound]
+        tra' = Set.insert e tra
 
 day20 :: IO ()
 day20 = do
-  (start, end, path) <- readInput <$> (readFile . (++ "/input/input20.txt") =<< getDataDir)
-  let pathList = Map.toList path
+  path <- readPath <$> (readFile . (++ "/input/input20.txt") =<< getDataDir)
   putStrLn
     . ("day20a: " ++)
     . show
-    . sum
-    $ map (shortCuts path 2 100) pathList
+    $ solve 2 100 path
   putStrLn
     . ("day20b: " ++)
     . show
-    . sum
-    $ map (shortCuts path 20 100) pathList
-  -- print $ shortCuts path 2 100
-  -- print $ shortCuts path 20 100
+    $ solve 20 100 path
