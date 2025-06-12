@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fplugin GHC.TypeLits.KnownNat.Solver #-}
-
 module Day3 where
 
 import Control.Arrow
