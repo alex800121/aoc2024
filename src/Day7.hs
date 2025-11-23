@@ -10,7 +10,6 @@ import Data.Functor (($>))
 import Data.List (partition)
 import Data.List.Split (splitOn)
 import Data.Maybe (catMaybes, fromMaybe, isJust, mapMaybe)
-import HeftiaParser (runNonDetMaybe)
 import Paths_AOC2024 (getDataDir)
 import Text.Read (readMaybe)
 

@@ -1,8 +1,9 @@
 module Day15 where
 
-import Control.Monad.Hefty (runPure)
-import Control.Monad.Hefty.State (modify, runState)
+import Control.Monad.Hefty (Eff, Effect, FOEs, runPure, (:>))
+import Control.Monad.Hefty.State (State (..), modify, runState)
 import Data.Bifunctor
+import Data.Kind (Constraint)
 import Data.List (foldl')
 import Data.List.Split (splitOn)
 import Data.Map.Strict (Map)
@@ -40,6 +41,7 @@ readInput input = (G m r, ins)
         b
     [a, b] = splitOn "\n\n" input
     (r, m) = runPure $ runState undefined $ drawMapWithKeyM f (0, 0) a
+    f :: forall s (es :: [Effect]) a. (FOEs es, State Index :> es) => Index -> Char -> Eff es (Index, Maybe Cell)
     f (_, y) '\n' = pure ((0, y + 1), Nothing)
     f (x, y) 'O' = pure ((x + 1, y), Just (Box (x, y)))
     f (x, y) '.' = pure ((x + 1, y), Just Space)

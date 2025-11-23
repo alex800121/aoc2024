@@ -1,13 +1,12 @@
 module Day3 where
 
 import Control.Arrow
-import Control.Monad.Hefty
-import Control.Monad.Hefty.NonDet
-import Control.Monad.Hefty.State
-import qualified Data.Effect.NonDet as NonDet
+import Data.Char (isDigit)
+import Data.List
 import Data.Maybe (mapMaybe)
-import HeftiaParser
+import Debug.Trace
 import Paths_AOC2024 (getDataDir)
+import Text.Read (readMaybe)
 
 data Mul a = Mul a a
   deriving (Eq, Show)
@@ -18,47 +17,20 @@ data Switch = Do | Dont
 data SMul a = S Switch | M (Mul a)
   deriving (Eq, Show)
 
-mulParser :: forall eh ef. (Choose <| ef, Empty <| ef, State String <| ef) => Eff eh ef (Mul Int)
-mulParser = do
-  string "mul("
-  a <- signedInteger
-  char ','
-  b <- signedInteger
-  char ')'
-  if a >= 0 && a < 1000 && b >= 0 && b < 1000 then pure (Mul a b) else NonDet.empty
-
-manyMul :: forall eh ef. (Choose <| ef, Empty <| ef, State String <| ef) => Eff eh ef [Mul Int]
-manyMul =
-  (eof @_ @eh >> pure [])
-    `branch`  ((:) <$> mulParser <*> manyMul)
-    `branch` (anySingle >> manyMul)
-
-switchParser :: forall eh ef. (Choose <| ef, Empty <| ef, State String <| ef) => Eff eh ef Switch
-switchParser =
-  (string "do()" >> pure Do) `branch` (string "don't()" >> pure Dont)
-
-parseTillDo :: forall eh ef. (Choose <| ef, Empty <| ef, State String <| ef) => Eff eh ef [Mul Int]
-parseTillDo =
-  (eof >> pure [])
-    `branch` (string "do()" >> manyMulSwitch)
-    `branch` (anySingle >> parseTillDo)
-
-manyMulSwitch :: forall eh ef. (Choose <| ef, Empty <| ef, State String <| ef) => Eff eh ef [Mul Int]
-manyMulSwitch =
-  (eof >> pure [])
-    `branch` (string "don't()" >> parseTillDo)
-    `branch` ((:) <$> mulParser <*> manyMulSwitch)
-    `branch` (anySingle >> manyMulSwitch)
-
-manySMul :: forall eh ef. (Choose <| ef, Empty <| ef, State String <| ef) => Eff eh ef [SMul Int]
-manySMul =
-  (eof >> pure [])
-    `branch` ((:) . S <$> switchParser <*> manySMul)
-    `branch` ((:) . M <$> mulParser <*> manySMul)
-    `branch` (anySingle >> manySMul)
-
-applyMul :: Mul Int -> Int
-applyMul (Mul x y) = x * y
+parse :: String -> [SMul Int]
+parse [] = []
+parse input
+  | Just s0 <- stripPrefix "mul(" input,
+    (x0, s1) <- span isDigit s0,
+    Just x <- readMaybe @Int x0,
+    ',' : s2 <- s1,
+    (y0, s3) <- span isDigit s2,
+    Just y <- readMaybe @Int y0,
+    ')' : s <- s3 =
+      M (Mul x y) : parse s
+  | Just s <- stripPrefix "do()" input = S Do : parse s
+  | Just s <- stripPrefix "don't()" input = S Dont : parse s
+parse (_ : input) = parse input
 
 day3 :: IO ()
 day3 = do
@@ -66,16 +38,23 @@ day3 = do
   putStrLn
     . ("day3a: " ++)
     . show
-    . fmap (sum . map applyMul)
-    . runPure
-    . evalState input
-    . runNonDetMaybe
-    $ manyMul <* eof
+    . sum
+    . map
+      ( \case
+          M (Mul x y) -> x * y
+          _ -> 0
+      )
+    $ parse input
   putStrLn
     . ("day3b: " ++)
     . show
-    . fmap (sum . map applyMul)
-    . runPure
-    . evalState input
-    . runNonDetMaybe
-    $ manyMulSwitch <* eof
+    . fst
+    . foldl'
+      ( \(acc, b) i -> case i of
+          S Do -> (acc, True)
+          S Dont -> (acc, False)
+          M (Mul x y) | b -> (acc + (x * y), b)
+          _ -> (acc, b)
+      )
+      (0, True)
+    $ parse input
