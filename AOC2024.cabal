@@ -24,7 +24,6 @@ common shared
     base >=4.18,
     containers,
     either,
-    ghc-typelits-knownnat ^>=0.7,
     heftia-effects ,
     megaparsec,
     multiset,
@@ -34,7 +33,7 @@ common shared
     random,
     split,
     unordered-containers,
-    vector,
+    vector
 
   default-extensions:
     AllowAmbiguousTypes
@@ -52,9 +51,6 @@ common shared
 
   -- ghc-options: -threaded -rtsopts "-with-rtsopts=-N -T" -fplugin GHC.TypeLits.KnownNat.Solver -O2
   ghc-options:
-    -fplugin
-    GHC.TypeLits.KnownNat.Solver
-    -- -fllvm
     -O2
 
 benchmark main-bench
@@ -65,7 +61,7 @@ benchmark main-bench
     AOC,
     AOC2024,
     base,
-    criterion,
+    criterion
 
   default-language: GHC2021
   -- ghc-options: -threaded -rtsopts "-with-rtsopts=-N -T"  -O2
@@ -73,12 +69,12 @@ benchmark main-bench
     -threaded
     -rtsopts
     "-with-rtsopts=-N -T"
-    -- -fllvm
     -O2
 
 library
   import: shared
   exposed-modules:
+    Solve
     Day1
     Day10
     Day11
@@ -104,7 +100,6 @@ library
     Day7
     Day8
     Day9
-    Main
 
   -- Modules included in this library but not exported.
   other-modules:
@@ -121,6 +116,7 @@ executable AOC2024
   main-is: Main.hs
   -- Modules included in this executable, other than Main.
   other-modules:
+    Solve
     Day1
     Day10
     Day11
@@ -157,9 +153,6 @@ executable AOC2024
     -threaded
     -rtsopts
     "-with-rtsopts=-N -T"
-    -fplugin
-    GHC.TypeLits.KnownNat.Solver
-    -- -fllvm
     -O2
 
   hs-source-dirs:

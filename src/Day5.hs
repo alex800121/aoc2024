@@ -24,19 +24,20 @@ applyOrdering rules x y = case (rules IM.!? x, rules IM.!? y) of
   (_, Just a) | IS.member x a -> GT
   _ -> EQ
 
-day5 :: IO ()
+day5 :: IO (String, String)
 day5 = do
-  [a, b] <- map lines . splitOn "\n\n" <$>(readFile . (++ "/input/input5.txt") =<< getDataDir) 
+  [a, b] <- map lines . splitOn "\n\n" <$> (readFile . (++ "/input/input5.txt") =<< getDataDir)
   let rules = ruleParser a
       books = map (map (read @Int) . splitOn ",") b
       (correct, incorrect) = partition (applyRules rules) books
-  putStrLn
-    . ("day5a: " ++)
-    . show
-    . sum
-    $ map middle correct
-  putStrLn
-    . ("day5b: " ++)
-    . show
-    . sum
-    $ map (middle . sortBy (applyOrdering rules)) incorrect
+  let
+    !finalAnsa =
+      show
+        . sum
+        $ map middle correct
+  let
+    !finalAnsb =
+      show
+        . sum
+        $ map (middle . sortBy (applyOrdering rules)) incorrect
+  pure (finalAnsa, finalAnsb)

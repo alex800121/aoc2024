@@ -43,35 +43,35 @@ starPos i n s = vZipWith (\(x, vx) w -> (x + vx * n) `mod` w) s i
 
 quadrant :: [Index] -> ((Int, Int), (Int, Int))
 quadrant = bimap fy fy . fx
-  where
-    fx [] = ([], [])
-    fx (c@(Cons x _) : xs)
-      | x < wm = first (c :) $ fx xs
-      | x > wm = second (c :) $ fx xs
-      | otherwise = fx xs
-    fy [] = (0, 0)
-    fy (c@(Cons _ (Cons y _)) : ys)
-      | y < hm = first (1 +) $ fy ys
-      | y > hm = second (1 +) $ fy ys
-      | otherwise = fy ys
+ where
+  fx [] = ([], [])
+  fx (c@(Cons x _) : xs)
+    | x < wm = first (c :) $ fx xs
+    | x > wm = second (c :) $ fx xs
+    | otherwise = fx xs
+  fy [] = (0, 0)
+  fy (c@(Cons _ (Cons y _)) : ys)
+    | y < hm = first (1 +) $ fy ys
+    | y > hm = second (1 +) $ fy ys
+    | otherwise = fy ys
 
 vx :: [Index] -> Double
 vx l = sum $ map (\(Cons x (Cons y _)) -> (fromIntegral x - m) ^ 2) l
-  where
-    m = sum (map (\(Cons x (Cons y _)) -> fromIntegral x) l) / fromIntegral (length l)
+ where
+  m = sum (map (\(Cons x (Cons y _)) -> fromIntegral x) l) / fromIntegral (length l)
 
 vy :: [Index] -> Double
 vy l = sum $ map (\(Cons x (Cons y _)) -> (fromIntegral y - m) ^ 2) l
-  where
-    m = sum (map (\(Cons x (Cons y _)) -> fromIntegral y) l) / fromIntegral (length l)
+ where
+  m = sum (map (\(Cons x (Cons y _)) -> fromIntegral y) l) / fromIntegral (length l)
 
 -- detectLow :: Double -> [Double] -> Maybe Int
 detectLow _ [] = Nothing
 detectLow factor (x : xs) = go 1 x x xs
-  where
-    go n s c _ | (s / fromIntegral n) > factor * c = Just $ n - 1
-    go _ _ _ [] = Nothing
-    go n s c (x : xs) = go (n + 1) (s + c) x xs
+ where
+  go n s c _ | (s / fromIntegral n) > factor * c = Just $ n - 1
+  go _ _ _ [] = Nothing
+  go n s c (x : xs) = go (n + 1) (s + c) x xs
 
 draw :: [Index] -> String
 draw = unlines . drawGraph (\case Just _ -> '#'; Nothing -> ' ') . Map.fromList . map (\(Cons x (Cons y _)) -> ((x, y), ()))
@@ -81,19 +81,20 @@ solveB l = do
   b <- detectLow 2.0 $ map vy l
   crt (a, width) (b, height)
 
-day14 :: IO ()
+day14 :: IO (String, String)
 day14 = do
   input <- mapMaybe (parseMaybe inputParser) . lines <$> (readFile . (++ "/input/input14.txt") =<< getDataDir)
-  putStrLn
-    . ("day14a: " ++)
-    . show
-    . uncurry (*)
-    . bimap (uncurry (*)) (uncurry (*))
-    . quadrant
-    $ map (starPos (Cons width (Cons height Nil)) 100) input
-  putStrLn
-    . ("day14b: " ++)
-    . show
-    . fmap fst
-    . solveB
-    $ map (\n -> map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
+  let
+    !finalAnsa =
+      show
+        . uncurry (*)
+        . bimap (uncurry (*)) (uncurry (*))
+        . quadrant
+        $ map (starPos (Cons width (Cons height Nil)) 100) input
+  let
+    !finalAnsb =
+      show
+        . fmap fst
+        . solveB
+        $ map (\n -> map (starPos (Cons width (Cons height Nil)) n) input) [0 ..]
+  pure (finalAnsa, finalAnsb)
