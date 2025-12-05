@@ -13,9 +13,9 @@ step i
   | i == 0 = [1]
   | even l = [i `div` l2, i `mod` l2]
   | otherwise = [i * 2024]
- where
-  l = log10 i
-  l2 = 10 ^ (l `div` 2)
+  where
+    l = log10 i
+    l2 = 10 ^ (l `div` 2)
 
 blink :: Map Integer Int -> Map Integer Int
 blink = Map.foldlWithKey' (\acc k e -> Map.unionsWith (+) (acc : map (`Map.singleton` e) (step k))) Map.empty
@@ -23,14 +23,12 @@ blink = Map.foldlWithKey' (\acc k e -> Map.unionsWith (+) (acc : map (`Map.singl
 day11 :: IO (String, String)
 day11 = do
   input <- Map.unionsWith (+) . map (uncurry Map.singleton . (,1) . read @Integer) . words <$> (readFile . (++ "/input/input11.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show
-        . sum
-        $ iterate blink input !! 25
-  let
-    !finalAnsb =
-      show
-        . sum
-        $ iterate blink input !! 75
+  let !finalAnsa =
+        show
+          . sum
+          $ iterate blink input !! 25
+  let !finalAnsb =
+        show
+          . sum
+          $ iterate blink input !! 75
   pure (finalAnsa, finalAnsb)

@@ -30,14 +30,12 @@ day5 = do
   let rules = ruleParser a
       books = map (map (read @Int) . splitOn ",") b
       (correct, incorrect) = partition (applyRules rules) books
-  let
-    !finalAnsa =
-      show
-        . sum
-        $ map middle correct
-  let
-    !finalAnsb =
-      show
-        . sum
-        $ map (middle . sortBy (applyOrdering rules)) incorrect
+  let !finalAnsa =
+        show
+          . sum
+          $ map middle correct
+  let !finalAnsb =
+        show
+          . sum
+          $ map (middle . sortBy (applyOrdering rules)) incorrect
   pure (finalAnsa, finalAnsb)

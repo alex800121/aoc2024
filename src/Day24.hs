@@ -40,25 +40,25 @@ buildAdder m cx i
   | Nothing <- cx = first (i,) do
       xxory <- f [] (XOR, xi, yi)
       if xxory /= Reg Z i then Left [m Map.!? (XOR, xi, yi)] else f [(XOR, xi, yi)] (AND, xi, yi)
- where
-  xi = Reg X i
-  yi = Reg Y i
-  f acc a = maybeToRight ([m Map.!? x | x <- a : acc]) (m Map.!? a)
+  where
+    xi = Reg X i
+    yi = Reg Y i
+    f acc a = maybeToRight ([m Map.!? x | x <- a : acc]) (m Map.!? a)
 
 buildAdderList n m ins = go m ins Nothing 0
- where
-  go _ _ _ i | i > n = pure []
-  go m ins c i = case buildAdder m c i of
-    Left (i0, xs) -> do
-      (Just x) <- xs
-      (Just y) <- xs
-      guard (x > y)
-      let ins' = Map.insert x (ins Map.! y) (Map.insert y (ins Map.! x) ins)
-          m' = rev ins'
-      case buildAdder m' c i of
-        Left (i1, _) | i1 <= i0 -> []
-        _ -> ([x, y] <>) <$> go m' ins' c i
-    Right c' -> go m ins (Just c') (i + 1)
+  where
+    go _ _ _ i | i > n = pure []
+    go m ins c i = case buildAdder m c i of
+      Left (i0, xs) -> do
+        (Just x) <- xs
+        (Just y) <- xs
+        guard (x > y)
+        let ins' = Map.insert x (ins Map.! y) (Map.insert y (ins Map.! x) ins)
+            m' = rev ins'
+        case buildAdder m' c i of
+          Left (i1, _) | i1 <= i0 -> []
+          _ -> ([x, y] <>) <$> go m' ins' c i
+      Right c' -> go m ins (Just c') (i + 1)
 
 readReg s
   | x : xs <- s, Just i <- readMaybe @Int xs = Reg (read [toUpper x]) i
@@ -69,15 +69,15 @@ readIns s
 
 readInput :: String -> (Int, Int, Ins)
 readInput s = (x, y, ins)
- where
-  [a, b] = splitOn "\n\n" s
-  (x, y) = foldl' f (0, 0) $ lines a
-  f (x, y) s
-    | c : xs <- s
-    , [a, 1] <- map (read @Int) $ splitOn ": " xs =
-        if c == 'x' then (x `setBit` a, y) else (x, y `setBit` a)
-    | otherwise = (x, y)
-  ins = Map.fromList $ map readIns $ lines b
+  where
+    [a, b] = splitOn "\n\n" s
+    (x, y) = foldl' f (0, 0) $ lines a
+    f (x, y) s
+      | c : xs <- s,
+        [a, 1] <- map (read @Int) $ splitOn ": " xs =
+          if c == 'x' then (x `setBit` a, y) else (x, y `setBit` a)
+      | otherwise = (x, y)
+    ins = Map.fromList $ map readIns $ lines b
 
 readOp AND = (&&)
 readOp OR = (||)
@@ -95,15 +95,15 @@ process ins x y reg m tra loo
   | Just a <- m Map.!? reg = Just (m, (a, tra', loo'))
   | Reg X i <- reg, a <- x `testBit` i = Just (Map.insert reg a m, (a, tra', loo'))
   | Reg Y i <- reg, a <- y `testBit` i = Just (Map.insert reg a m, (a, tra', loo'))
-  | Just (op, a, b) <- ins Map.!? reg
-  , Just (m0, (procA, tra0, loo0)) <- process ins x y a m tra' loo'
-  , Just (m1, (procB, tra1, loo1)) <- process ins x y b m0 tra0 loo0
-  , x <- readOp op procA procB =
+  | Just (op, a, b) <- ins Map.!? reg,
+    Just (m0, (procA, tra0, loo0)) <- process ins x y a m tra' loo',
+    Just (m1, (procB, tra1, loo1)) <- process ins x y b m0 tra0 loo0,
+    x <- readOp op procA procB =
       Just (Map.insert reg x m1, (x, tra1, loo1))
   | otherwise = Nothing
- where
-  tra' = Set.insert reg tra
-  loo' = Set.insert (reg, tra) loo
+  where
+    tra' = Set.insert reg tra
+    loo' = Set.insert (reg, tra) loo
 
 showReg (Reg x i) = map toLower (show x) <> reverse (take 2 (reverse (show i) <> repeat '0'))
 showReg (Wire x) = x
@@ -116,15 +116,13 @@ rev =
 day24 :: IO (String, String)
 day24 = do
   (x, y, ins) <- readInput <$> (readFile . (++ "/input/input24.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show
-        . Map.foldlWithKey' (\acc k b -> case k of Reg Z i | b -> acc `setBit` i; _ -> acc) (0 :: Int)
-        $ processAll ins x y
+  let !finalAnsa =
+        show
+          . Map.foldlWithKey' (\acc k b -> case k of Reg Z i | b -> acc `setBit` i; _ -> acc) (0 :: Int)
+          $ processAll ins x y
   let revins = rev ins
       ansB = head $ buildAdderList 45 revins ins
-  let
-    !finalAnsb =
-      intercalate "," $
-        sort [showReg x | x <- ansB]
+  let !finalAnsb =
+        intercalate "," $
+          sort [showReg x | x <- ansB]
   pure (finalAnsa, finalAnsb)

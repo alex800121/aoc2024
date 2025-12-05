@@ -14,17 +14,15 @@ day1 = do
       . map (map (read @Int) . words)
       . lines
       <$> (readFile . (++ "/input/input1.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show
-        . sum
-        . map abs
-        $ zipWith subtract a b
+  let !finalAnsa =
+        show
+          . sum
+          . map abs
+          $ zipWith subtract a b
   let f = IM.fromList . map ((,) <$> head <*> length) . group
       a' = f a
       b' = f b
-  let
-    !finalAnsb =
-      show $
-        IM.foldrWithKey (\k v acc -> fromMaybe 0 (b' IM.!? k) * v * k + acc) 0 a'
+  let !finalAnsb =
+        show $
+          IM.foldrWithKey (\k v acc -> fromMaybe 0 (b' IM.!? k) * v * k + acc) 0 a'
   pure (finalAnsa, finalAnsb)

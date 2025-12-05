@@ -6,17 +6,16 @@ import Data.List.Split (splitOn)
 import Paths_AOC2024 (getDataDir)
 
 readInput s = partitionEithers l
- where
-  f = map (length . head . group) . transpose . lines
-  g f x = if head x == '.' then Left (f x) else Right (f x)
-  l = map (g f) $ splitOn "\n\n" s
+  where
+    f = map (length . head . group) . transpose . lines
+    g f x = if head x == '.' then Left (f x) else Right (f x)
+    l = map (g f) $ splitOn "\n\n" s
 
 day25 :: IO (String, String)
 day25 = do
   (keys, locks) <- readInput <$> (readFile . (++ "/input/input25.txt") =<< getDataDir)
   -- (keys, locks) <- readInput <$> (readFile . (++ "/input/test25.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show $
-        length [(k, l) | k <- keys, l <- locks, and (zipWith (>=) k l)]
+  let !finalAnsa =
+        show $
+          length [(k, l) | k <- keys, l <- locks, and (zipWith (>=) k l)]
   pure (finalAnsa, "Merry Christmas!!!")

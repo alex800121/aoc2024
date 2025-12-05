@@ -52,49 +52,47 @@ data Reg a = R {_a :: a, _b :: a, _c :: a}
 
 solveB :: Ins -> [Integer]
 solveB ins = go (reverse $ U.toList ins) 0
- where
-  go [] a = pure a
-  go (n : ns) a = do
-    c <- [0 .. 7]
-    let a8 = a * 8 + c
-    guard $ n == last (_out (run ins (G 0 (R a8 0 0) [])))
-    go ns a8
+  where
+    go [] a = pure a
+    go (n : ns) a = do
+      c <- [0 .. 7]
+      let a8 = a * 8 + c
+      guard $ n == last (_out (run ins (G 0 (R a8 0 0) [])))
+      go ns a8
 
 step :: Ins -> GameState Integer -> Maybe (GameState Integer)
 step ins (G pos reg out) = f <$> ((,) <$> (ins U.!? pos) <*> (ins U.!? (pos + 1)))
- where
-  combo a | a >= 0 && a <= 3 = a
-  combo 4 = _a reg
-  combo 5 = _b reg
-  combo 6 = _c reg
-  combo a = error $ show a ++ " is not a valid operand"
-  f (0, c) = G (pos + 2) (reg{_a = _a reg `shiftR` fromIntegral (combo c)}) out
-  f (1, c) = G (pos + 2) (reg{_b = _b reg `xor` c}) out
-  f (2, c) = G (pos + 2) (reg{_b = combo c .&. 7}) out
-  f (3, c)
-    | _a reg == 0 = G (pos + 2) reg out
-    | otherwise = G (fromIntegral c) reg out
-  f (4, c) = G (pos + 2) (reg{_b = _b reg `xor` _c reg}) out
-  f (5, c) = G (pos + 2) reg (o : out)
-   where
-    o = combo c .&. 7
-  f (6, c) = G (pos + 2) (reg{_b = _a reg `shiftR` fromIntegral (combo c)}) out
-  f (7, c) = G (pos + 2) (reg{_c = _a reg `shiftR` fromIntegral (combo c)}) out
+  where
+    combo a | a >= 0 && a <= 3 = a
+    combo 4 = _a reg
+    combo 5 = _b reg
+    combo 6 = _c reg
+    combo a = error $ show a ++ " is not a valid operand"
+    f (0, c) = G (pos + 2) (reg {_a = _a reg `shiftR` fromIntegral (combo c)}) out
+    f (1, c) = G (pos + 2) (reg {_b = _b reg `xor` c}) out
+    f (2, c) = G (pos + 2) (reg {_b = combo c .&. 7}) out
+    f (3, c)
+      | _a reg == 0 = G (pos + 2) reg out
+      | otherwise = G (fromIntegral c) reg out
+    f (4, c) = G (pos + 2) (reg {_b = _b reg `xor` _c reg}) out
+    f (5, c) = G (pos + 2) reg (o : out)
+      where
+        o = combo c .&. 7
+    f (6, c) = G (pos + 2) (reg {_b = _a reg `shiftR` fromIntegral (combo c)}) out
+    f (7, c) = G (pos + 2) (reg {_c = _a reg `shiftR` fromIntegral (combo c)}) out
 
 run ins g = maybe g (run ins) (step ins g)
 
 day17 :: IO (String, String)
 day17 = do
-  let
-    !finalAnsa =
-      intercalate ","
-        . map show
-        . reverse
-        . _out
-        $ run ins input
-  let
-    !finalAnsb =
-      show
-        . minimum
-        $ solveB ins
+  let !finalAnsa =
+        intercalate ","
+          . map show
+          . reverse
+          . _out
+          $ run ins input
+  let !finalAnsb =
+        show
+          . minimum
+          $ solveB ins
   pure (finalAnsa, finalAnsb)

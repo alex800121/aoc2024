@@ -31,12 +31,12 @@ inputParser = do
 solveX ((a, b, c), (d, e, f))
   | m /= 0 && mx == 0 && my == 0 = Just $ 3 * dx + dy
   | otherwise = Nothing
- where
-  m = a * e - b * d
-  cx = c * e - b * f
-  cy = a * f - c * d
-  (dx, mx) = cx `divMod` m
-  (dy, my) = cy `divMod` m
+  where
+    m = a * e - b * d
+    cx = c * e - b * f
+    cy = a * f - c * d
+    (dx, mx) = cx `divMod` m
+    (dy, my) = cy `divMod` m
 
 modifyInput :: Input -> Input
 modifyInput ((a, b, x), (c, d, y)) = ((a, b, x + 10000000000000), (c, d, y + 10000000000000))
@@ -46,14 +46,12 @@ day13 = do
   -- print $ emcd 2 3
   input <- map (fromJust . parseMaybe inputParser) . splitOn "\n\n" <$> (readFile . (++ "/input/input13.txt") =<< getDataDir)
   -- input <- map (fromJust . parseMaybe inputParser) . splitOn "\n\n" <$> (readFile . (++ "/input/test13.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show
-        . sum
-        $ mapMaybe solveX input
-  let
-    !finalAnsb =
-      show
-        . sum
-        $ mapMaybe (solveX . modifyInput) input
+  let !finalAnsa =
+        show
+          . sum
+          $ mapMaybe solveX input
+  let !finalAnsb =
+        show
+          . sum
+          $ mapMaybe (solveX . modifyInput) input
   pure (finalAnsa, finalAnsb)

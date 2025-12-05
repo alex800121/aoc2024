@@ -17,17 +17,16 @@ solveA =
 
 solveB :: [Int] -> Bool
 solveB = any solveA . ((:) <$> id <*> map snd . pickAnySplit)
+
 day2 :: IO (String, String)
 day2 = do
   input <- map (map (read @Int) . words) . lines <$> (readFile . (++ "/input/input2.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show
-        . length
-        $ filter solveA input
-  let
-    !finalAnsb =
-      show
-        . length
-        $ filter solveB input
+  let !finalAnsa =
+        show
+          . length
+          $ filter solveA input
+  let !finalAnsb =
+        show
+          . length
+          $ filter solveB input
   pure (finalAnsa, finalAnsb)

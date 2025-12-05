@@ -2,8 +2,8 @@ module Day6 where
 
 import Control.Monad.ST (ST, runST)
 import Data.Array (Array)
-import Data.Array.IArray ( Ix(inRange), Array, (!?), IArray(bounds), elems )
-import Data.Array.ST (MArray (newArray, newArray_), STArray, freeze, runSTArray, writeArray, getElems, modifyArray')
+import Data.Array.IArray (Array, IArray (bounds), Ix (inRange), elems, (!?))
+import Data.Array.ST (MArray (newArray, newArray_), STArray, freeze, getElems, modifyArray', runSTArray, writeArray)
 import Data.Bifunctor (Bifunctor (..))
 import Data.Bits (Bits (..))
 import Data.List (elemIndex, find, findIndex)
@@ -13,9 +13,9 @@ import Data.Maybe (fromMaybe, isJust, isNothing)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Word (Word8)
+import GHC.Arr (newSTArray)
 import MyLib (Direction (..), Parser, drawArray, toIndex)
 import Paths_AOC2024 (getDataDir)
-import GHC.Arr (newSTArray)
 
 type Index = (Int, Int)
 
@@ -25,6 +25,7 @@ type Guard = (Index, Direction)
 data Cell = Space | Obstacle deriving (Show, Eq, Ord)
 
 type A = Array Index Cell
+
 inputParser :: String -> (Guard, A)
 inputParser s = runST $ do
   arr <- newArray ((0, 0), (length x - 1, length xs)) Space :: ST s (STArray s Index Cell)

@@ -21,31 +21,29 @@ xmas2 =
   take 4 $
     iterate
       (map (first rotate))
-      [ ((0, 0), 'A')
-      , ((-1, -1), 'M')
-      , ((-1, 1), 'M')
-      , ((1, -1), 'S')
-      , ((1, 1), 'S')
+      [ ((0, 0), 'A'),
+        ((-1, -1), 'M'),
+        ((-1, 1), 'M'),
+        ((1, -1), 'S'),
+        ((1, 1), 'S')
       ]
 
 solve input x =
   length
     [ ()
-    | i <- indices input
-    , xmas <- x
-    , testXMAS2 i input xmas
+    | i <- indices input,
+      xmas <- x,
+      testXMAS2 i input xmas
     ]
 
 day4 :: IO (String, String)
 day4 = do
   -- input <- drawArray @UArray . lines <$> readFile "input/test4.txt"
   input <- drawArray @UArray . lines <$> (readFile . (++ "/input/input4.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show $
-        solve input xmas1
-  let
-    !finalAnsb =
-      show
-       $ solve input xmas2
+  let !finalAnsa =
+        show $
+          solve input xmas1
+  let !finalAnsb =
+        show $
+          solve input xmas2
   pure (finalAnsa, finalAnsb)

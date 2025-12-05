@@ -25,48 +25,46 @@ readInput = IM.fromListWith (<>) . concatMap (\x -> let [a, b] = map toInt $ spl
 
 solveA :: IntMap IntSet -> Set IntSet
 solveA m = IM.foldlWithKey' f Set.empty m
- where
-  f :: Set IntSet -> Int -> IntSet -> Set IntSet
-  f acc0 k0 es0 = IS.foldl' g acc0 es0
-   where
-    g :: Set IntSet -> Int -> Set IntSet
-    g acc e = es
-     where
-      es1 = m IM.! e
-      es = IS.foldl' (\acc x -> Set.insert (IS.fromList [k0, e, x]) acc) acc $ es0 `IS.intersection` es1
+  where
+    f :: Set IntSet -> Int -> IntSet -> Set IntSet
+    f acc0 k0 es0 = IS.foldl' g acc0 es0
+      where
+        g :: Set IntSet -> Int -> Set IntSet
+        g acc e = es
+          where
+            es1 = m IM.! e
+            es = IS.foldl' (\acc x -> Set.insert (IS.fromList [k0, e, x]) acc) acc $ es0 `IS.intersection` es1
 
 bka :: IntMap IntSet -> IntSet
 bka m = go IS.empty IS.empty (IM.keysSet m) IS.empty
- where
-  c a b = if IS.size a > IS.size b then a else b
-  go acc r p x
-    | IS.null p && IS.null x = c acc r
-    | IS.null p = acc
-    | otherwise = acc'
-   where
-    (acc', _, _) = IS.foldl' f (acc, p, x) p
-    f (acc, p, x) v = (acc', p', x')
-     where
-      neighbors = m IM.! v
-      acc' = go acc (IS.insert v r) (IS.intersection p neighbors) (IS.intersection x neighbors)
-      p' = IS.delete v p
-      x' = IS.insert v x
+  where
+    c a b = if IS.size a > IS.size b then a else b
+    go acc r p x
+      | IS.null p && IS.null x = c acc r
+      | IS.null p = acc
+      | otherwise = acc'
+      where
+        (acc', _, _) = IS.foldl' f (acc, p, x) p
+        f (acc, p, x) v = (acc', p', x')
+          where
+            neighbors = m IM.! v
+            acc' = go acc (IS.insert v r) (IS.intersection p neighbors) (IS.intersection x neighbors)
+            p' = IS.delete v p
+            x' = IS.insert v x
 
 day23 :: IO (String, String)
 day23 = do
   input <- readInput <$> (readFile . (++ "/input/input23.txt") =<< getDataDir)
-  let
-    !finalAnsa =
-      show
-        . length
-        . Set.filter (any ((== 't') . head))
-        . Set.map (map toChr . IS.toList)
-        $ solveA input
-  let
-    !finalAnsb =
-      intercalate ","
-        . sort
-        . map toChr
-        . IS.toList
-        $ bka input
+  let !finalAnsa =
+        show
+          . length
+          . Set.filter (any ((== 't') . head))
+          . Set.map (map toChr . IS.toList)
+          $ solveA input
+  let !finalAnsb =
+        intercalate ","
+          . sort
+          . map toChr
+          . IS.toList
+          $ bka input
   pure (finalAnsa, finalAnsb)
